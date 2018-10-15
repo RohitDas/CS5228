@@ -3,6 +3,7 @@ from bow import read_news_articles, read_titles, complete_preprocessing, augment
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from nltk.tokenize import word_tokenize
 import numpy as np
+
 def tag_docs(tokens_list):
     tagged_docs = []
     for index, tokens_sents in tokens_list:
@@ -14,7 +15,9 @@ def tag_docs(tokens_list):
 
 
 def create_doc2vec(tag_docs):
-    print tag_docs
+    """
+        Trains the doc2vec model
+    """
     max_epochs = 100                                
     vec_size = 500                                            
     alpha = 0.025                          

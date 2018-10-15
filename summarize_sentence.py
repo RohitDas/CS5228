@@ -7,13 +7,13 @@ class SummarizeParagraph(object):
         Class contains code for text summarization.
     """
     def __init__(self, n):
+        # n -> get the n most important summarized sentences.
         self.n = n
 
     def preprocess(self, text):
-         text = re.sub(r'\[[0-9]*\]', ' ', text)
-         text = re.sub(r'\s+', ' ', text)
-         formatted_text = re.sub('[^a-zA-Z]', ' ', text)
-         formatted_text = re.sub(r'\s+', ' ', formatted_text)  
+         processed_line = re.sub(r'\W+', ' ', text).strip()
+         processed_line = re.sub(r'\w*\d\w*', '', processed_line).strip()
+         formatted_text = re.sub(r'\s+', ' ', processed_line)  
          return text, formatted_text
 
     def sent_tokenize(self, text):
@@ -22,11 +22,8 @@ class SummarizeParagraph(object):
     def summarize(self, text):
         if not text.strip():
             return ''
-
-        print text
         stopwords = nltk.corpus.stopwords.words('english')
         text, preprocessed_text = self.preprocess(text)
-        print preprocessed_text
         sentence_list = self.sent_tokenize(text)
         word_frequencies = {}  
         for word in nltk.word_tokenize(preprocessed_text):  
@@ -44,7 +41,7 @@ class SummarizeParagraph(object):
 	for sent in sentence_list:  
 	    for word in nltk.word_tokenize(sent.lower()):
 		if word in word_frequencies.keys():
-		    if len(sent.split(' ')) < 30:
+		    if len(sent.split(' ')) < 70:
 		        if sent not in sentence_scores.keys():
 		            sentence_scores[sent] = word_frequencies[word]
 		        else:
@@ -70,8 +67,9 @@ def read_news_articles():
     return lines
 
 tuples = read_news_articles()
-summarize_para = SummarizeParagraph(6)
+summarize_para = SummarizeParagraph(8)
 for id, text in tuples:
+    print "-------------------------------------------------------------------------------------------------------"
     print(summarize_para.summarize(re.sub(r'[^\x00-\x7f]',r'', text)))
 
 

@@ -10,8 +10,13 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
 from gensim.models.doc2vec import TaggedDocument
+from nltk.stem import WordNetLemmatizer
 
 def read_titles():
+    """
+        Function read the titles file and stores it in a list in the format (id, title)
+        where id is the docid
+    """
     titles = []
     with open("titles", "r") as fp:
         for line in fp:
@@ -25,6 +30,10 @@ def read_titles():
     return titles
 
 def read_news_articles():
+    """
+        Function reads the news articles files : Thread_[0..3]
+        the files contain the articles in the following formats: id_1|article_1##id_2|article_2 ....
+    """
     num_files = 4
     lines = []
     for num_file in range(num_files):
@@ -33,26 +42,39 @@ def read_news_articles():
             lines += fp.read().split("##")
     lines = map(lambda line: line.split("|"), lines)
     lines =  filter(lambda tup: len(tup) == 2, lines)
+    #filter all those lines that have Empty as there article text
     lines = filter(lambda tup: tup[1].strip() != 'Empty', lines)
+    #SPlit each article into lines.
     lines = map(lambda tup: (tup[0], tup[1].lower().split("\n")), lines)
     return lines
 
 def preprocess(lines):
+    """
+        Does some preprocessing.
+    """
     processed_lines = []
     for line in lines:
+        #Remove non-alphanumeric characters
         processed_line = re.sub(r'\W+', ' ', line).strip()
+        #Remove all digits
         processed_line = re.sub(r'\w*\d\w*', '', processed_line).strip()
         if processed_line:
             processed_lines.append(processed_line)
     return processed_lines
  
 def tokenize(lines):
+    """
+        Uses nltk word_tokenize to tokenize the lines
+    """
     tokenized_lines = []
     for line in lines:
         tokenized_lines.append(word_tokenize(line))
     return tokenized_lines
 
 def remove_stopwords(tokenized_lines):
+    """
+        Remove all the stopwords
+    """
     lines = []
     stop_words = stopwords.words("english")
     for line in tokenized_lines:
@@ -60,19 +82,38 @@ def remove_stopwords(tokenized_lines):
     return lines
 
 def stem(tokens_list):
+    """
+        Uses Porter Stemmmingalgorithm to stem the lines.
+    """
     stemmed_list = []
     p_stemmer = PorterStemmer()
     for token_list in tokens_list:
         stemmed_list.append([p_stemmer.stem(i) for i in token_list])
     return stemmed_list
 
+def lemmatize(tokens_list):
+    """
+        Uses WordNet lemmatizer to lemmatize
+    """
+    wordnet_lemmatizer = WordNetLemmatizer()
+    lemmatized_list = []
+    for token_list in tokens_list:
+        lemmatized_list.append([wordnet_lemmatizer.lemmatize(i) for i in token_list])
+    return lemmatized_list
+
 def tag_docs(tokens_list):
+    """
+        Creates a list of Tagged documents
+    """
     tagged_docs = []
     for index, token_list in enumerate(tokens_list):
         tagged_docs.append(TaggedDocument(token_list, str(index)))
     return tagged_docs
 
 def get_representation(preliminary_count, size):
+    """
+        It gets the bag-of-words representation of a word.
+    """
     representation = []
     for idx, count in preliminary_count:
         if len(representation) == idx:
@@ -87,6 +128,9 @@ def get_representation(preliminary_count, size):
     return representation
 
 def create_bow(stemmed_tokens):
+    """
+        Creates the bow representation for tokens
+    """
     texts = []
     for id, lines in stemmed_tokens:
         texts += lines
@@ -106,26 +150,21 @@ def create_bow(stemmed_tokens):
         bow_representation.append(get_representation(dictionary.doc2bow(para), size_of_dictionary))
     return np.array(id_list), np.array(bow_representation)
 
-
-def create_doc_two_vec(docs):
-    model = gensim.models.Doc2Vec(docs,
-            size=20,
-            window=3,
-            min_count=0,
-            workers=10,
-            alpha=0.025,
-            min_alpha=0.025)
-    model.train(docs, total_examples=len(docs), epochs=200)
-    return model
-
 def complete_preprocessing(lines):
-    processed_lines = map(lambda tup: (tup[0], preprocess(tup[1])) if tup[1] != 'Empty' else tup, lines)
-    tokenized_lines = map(lambda tup: (tup[0], tokenize(tup[1])), processed_lines)
-    stopword_removed_lines = map(lambda tup: (tup[0], remove_stopwords(tup[1])), tokenized_lines)
-    stemmed_tokens = map(lambda tup: (tup[0], stem(tup[1])), stopword_removed_lines)
-    return stemmed_tokens
+    """
+        Does a series of preprocessing steps.
+    """
+    lines = map(lambda tup: (tup[0], preprocess(tup[1])) if tup[1] != 'Empty' else tup, lines)
+    lines = map(lambda tup: (tup[0], tokenize(tup[1])), lines)
+    lines = map(lambda tup: (tup[0], remove_stopwords(tup[1])), lines)
+    #lines = map(lambda tup: (tup[0], stem(tup[1])), stopword_removed_lines)
+    #lines = map(lambda tup: (tup[0], lemmatize(tup[1])), stopword_removed_lines)
+    return lines
 
 def augment_with_title(lines, all_lines):
+    """
+        For all those documents that had bad urls, use the title instead
+    """
     out = []
     curr_id = 0
     for id, text in lines:
@@ -139,24 +178,22 @@ def augment_with_title(lines, all_lines):
         curr_id += 1
     return out
 
-#print("Reading articles")
-#articles = read_news_articles()
-"""
+print("Reading articles")
+articles = read_news_articles()
 print("Reading titles")
 titles = read_titles()
 #print("Processing articles")
-#prepreprocessed_articles = complete_preprocessing(articles)
+prepreprocessed_articles = complete_preprocessing(articles)
 print("processing titles")
 preprocessed_titles = complete_preprocessing(titles)
 print("augmenting with titles")
-#full_representation = augment_with_title(prepreprocessed_articles, preprocessed_titles)
+full_representation = augment_with_title(prepreprocessed_articles, preprocessed_titles)
 #print(full_representation)
 id, bow = create_bow(preprocessed_titles)
 print(id.shape, bow.shape)
 np.save("ids", id)
 np.save("bow_titles", bow)
 
-"""
 
 #print stopword_removed_titles
 #model = create_doc_two_vec(tagged_docs)
