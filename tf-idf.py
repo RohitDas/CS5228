@@ -64,19 +64,20 @@ def preprocess(article):
     processed_line = re.sub(r'\w*\d\w*', '', processed_line).strip()
     return processed_line
 
-
 articles = read_news_articles()
 #articles = read_titles()
 for id in articles:
     articles[id] = preprocess(articles[id])
-#preprocess_articles = map(lambda x: (x[0], preprocess(x[1])), articles)
 articles_list = []
 for i in range(len(articles)):
     articles_list.append(articles[str(i)])
 
 train_df = pd.read_csv("train.csv")
-print train_df.category.dtype
 labels = train_df.category
+
+"""
+Personal Experimentation
+
 label_modified = []
 articles_modified = []
 
@@ -88,10 +89,15 @@ for i, label in enumerate(labels):
         articles_modified.append(articles_list[i])
 labels = pd.Series(label_modified)
 articles_list = articles_modified
+"""
+
 
 tfidf = TfidfVectorizer(sublinear_tf=False, min_df=2, norm='l2', ngram_range=(1,4), stop_words='english')
-
 features = tfidf.fit_transform(articles_list).toarray()
+
+"""
+    This section is used to produce the important correlated features per class.
+"""
 
 N = 20
 for category in range(4):
@@ -110,6 +116,11 @@ for category in range(4):
     print("  . Most correlated format fourgrams:\n       . {}".format('\n       . '.join(fourgrams[-N:])))
 
 
+"""
+    This part does a visualization of the features in 2D.
+"""
+
+
 from sklearn.manifold import TSNE
 
 # Sampling a subset of our dataset because t-SNE is computationally expensive
@@ -126,6 +137,10 @@ for category in range(4):
                       fontdict=dict(fontsize=15))
     plt.legend()
 plt.show()
+
+"""
+    This part deals with training all the features.
+"""
 
 
 from sklearn.linear_model import LogisticRegression
