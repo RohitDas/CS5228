@@ -6,7 +6,7 @@ import re
 import threading
 from newspaper import Article
 
-num_threads = 4
+num_threads = 6
 non_alpha_regex = re.compile('[^a-zA-Z]')
 
 def get_urls(urlpath):
@@ -23,8 +23,9 @@ def get_urls(urlpath):
 def worker(thread_num, 
             urls):
     url_text = []
-    thread_file_key = open("test_data/Thread_keywords_"+str(thread_num) + ".dat", "a+")
-    thread_file_summarized = open("test_data/Thread_summarized_"+str(thread_num) + ".dat", "a+")
+    thread_file = open("test_data_v2/Thread_"+str(thread_num) + ".dat", "a+")
+    thread_file_key = open("test_data_v2/Thread_keywords_"+str(thread_num) + ".dat", "a+")
+    thread_file_summarized = open("test_data_v2/Thread_summarized_"+str(thread_num) + ".dat", "a+")
     for (idx,url) in urls:
         print(thread_num, idx, url)
         try:
@@ -35,25 +36,28 @@ def worker(thread_num,
             article.nlp()
             keywords = ','.join(article.keywords)
             summary = article.summary
-            print(keywords)
+            #print(keywords)
         except Exception as e:
             print("Error: " + str(e))
+            thread_file.write("|".join([str(idx), "Empty"]))
+            thread_file.write("##")
             thread_file_key.write("|".join([str(idx), "Empty"]))
             thread_file_key.write("##")
             thread_file_summarized.write("|".join([str(idx), "Empty"]))
             thread_file_summarized.write("##")
             continue
-        
+        thread_file.write("|".join([str(idx), text]))
+        thread_file.write("##")
         thread_file_key.write("|".join([str(idx), keywords]))
         thread_file_key.write("##")
         thread_file_summarized.write("|".join([str(idx), summary]))
         thread_file_summarized.write("##")
     thread_file_key.close()
     thread_file_summarized.close()
-
+    thread_file.close()
 threadn = 0
 threads = []
-for urls in get_urls("urls"):
+for urls in get_urls("urls_v2"):
     t = threading.Thread(target=worker, args=(threadn, urls))
     threads.append(t)
     t.start()
