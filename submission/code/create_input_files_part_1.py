@@ -31,10 +31,10 @@ def create_category_file(df, output_path):
 
 if __name__ == "__main__":
 
-	train_file = "../data/train.csv"
+	train_file = "../data/train_v2.csv"
 	train_df = pd.read_csv(train_file)
-	create_title_file(train_df, "dir/trainv1_title")
-	create_url_file(train_df, "dir/trainv1_url")
-	create_category_file(train_df, "dir/trainv1_category")
+	create_title_file(train_df, "dir/train_v2_title")
+	create_url_file(train_df, "dir/train_v2_url")
+	create_category_file(train_df, "dir/train_v2_category")
 
 
