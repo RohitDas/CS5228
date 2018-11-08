@@ -26,6 +26,7 @@ def get_pos(word):
         most_common_pos_list = pos_counts.most_common(3)
         return most_common_pos_list[0][0] # first indexer for getting the top POS from list, second indexer for getting POS from tuple( POS: count )
 
+
 def read_titles():
     """
         Function read the titles file and stores it in a list in the format (id, title)
@@ -109,6 +110,7 @@ def lemmatize(tokens_list):
     """
     wordnet_lemmatizer = WordNetLemmatizer()
     return [wordnet_lemmatizer.lemmatize(i, get_pos(i)) for i in tokens_list]
+
 
 def tag_docs(tokens_list):
     """

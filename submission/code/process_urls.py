@@ -28,6 +28,7 @@ def worker(thread_num,
     thread_file = open(train_dir + "Thread_"+str(thread_num) + ".dat", "a+")
     thread_file_key = open(train_dir + "Thread_keywords_"+str(thread_num) + ".dat", "a+")
     thread_file_summarized = open(train_dir + "Thread_summarized_"+str(thread_num) + ".dat", "a+")
+    cnt = 0
     for (idx,url) in urls:
         print(thread_num, idx, url)
         try:
@@ -54,6 +55,11 @@ def worker(thread_num,
         thread_file_key.write("###")
         thread_file_summarized.write("||".join([str(idx), summary]))
         thread_file_summarized.write("###")
+        cnt += 1
+        if cnt > 10:
+            break
+
+        print("Count: ", cnt)
     thread_file_key.close()
     thread_file_summarized.close()
     thread_file.close()
@@ -68,6 +74,8 @@ def scrape(url_fp, train_dir):
         t.start()
         print("Started Thread: ", str(threadn))
         threadn += 1
+    for thread in threads:
+        thread.join()
 
 if __name__ == "__main__":
     scrape("test_dir/test_url", "test_dir/")

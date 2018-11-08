@@ -2,9 +2,79 @@ import re
 import difflib
 import pandas as pd
 import numpy as np
-from bow import complete_preprocessing
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn import decomposition, ensemble
+import pickle
+import gensim
+from gensim import corpora
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem.porter import PorterStemmer
+from gensim.models.doc2vec import TaggedDocument
+from nltk.stem import WordNetLemmatizer
+from collections import Counter 
+from nltk.corpus import wordnet # To get words in dictionary with their parts of speech
+
+
+def get_pos(word):
+        w_synsets = wordnet.synsets(word)
+        pos_counts = Counter()
+        pos_counts["n"] = len(  [ item for item in w_synsets if item.pos()=="n"]  )
+        pos_counts["v"] = len(  [ item for item in w_synsets if item.pos()=="v"]  )
+        pos_counts["a"] = len(  [ item for item in w_synsets if item.pos()=="a"]  )
+        pos_counts["r"] = len(  [ item for item in w_synsets if item.pos()=="r"]  )
+                                
+        most_common_pos_list = pos_counts.most_common(3)
+        return most_common_pos_list[0][0] # first indexer for getting the top POS from list, second indexer for getting POS from tuple( POS: count )
+
+def preprocess(lines):
+    """
+        Does some preprocessing.
+    """
+    #Remove non-alphanumeric characters
+    processed_line = re.sub(r'\W+', ' ', lines).strip()
+    #Remove all digits
+    processed_line = re.sub(r'\w*\d\w*', '', processed_line).strip()
+    return processed_line
+ 
+def tokenize(lines):
+    """
+        Uses nltk word_tokenize to tokenize the lines
+    """
+    return word_tokenize(lines)
+
+def remove_stopwords(tokenized_lines):
+    """
+        Remove all the stopwords
+    """
+    stop_words = stopwords.words("english")
+    return [word for word in tokenized_lines if word not in stop_words]
+
+def stem(tokens_list):
+    """
+        Uses Porter Stemmmingalgorithm to stem the lines.
+    """
+    p_stemmer = PorterStemmer()
+    return [p_stemmer.stem(i) for i in tokens_list]
+
+def lemmatize(tokens_list):
+    """
+        Uses WordNet lemmatizer to lemmatize
+    """
+    wordnet_lemmatizer = WordNetLemmatizer()
+    return [wordnet_lemmatizer.lemmatize(i, get_pos(i)) for i in tokens_list]
+
+def complete_preprocessing(lines):
+    """
+        Does a series of preprocessing steps.
+    """
+    lines = map(lambda line: preprocess(line), lines)
+    lines = map(lambda line: tokenize(line), lines)
+    lines = map(lambda line: remove_stopwords(line), lines)
+    #lines = map(lambda line: lemmatize(line), lines)
+    #lines = map(lambda line: stem(line), lines)
+    lines = map(lambda line: lemmatize(line), lines)
+    return lines
 
 
 def read_titles(title):
@@ -128,8 +198,8 @@ def pred(train_title_fp,
     predictions = []
 
     def get_pred(similarity_scores):
-        scores_greater_than_45 = filter(lambda x: x[0] > 0.45, similarity_scores)
-        scores_less_than_45 = filter(lambda x: x[0] < 0.45, similarity_scores)
+        scores_greater_than_45 = list(filter(lambda x: x[0] > 0.45, similarity_scores))
+        scores_less_than_45 = list(filter(lambda x: x[0] < 0.45, similarity_scores))
         if len(scores_greater_than_45): #>= 0.20 * len(similarity_scores):
             counts = {}
             for score in scores_greater_than_45:
@@ -151,13 +221,14 @@ def pred(train_title_fp,
         pred = get_pred(sorted(similarity_scores, reverse=True)[0:15])
         predictions.append(np.array([tids[tidx],pred]))
 
-    np.save("exp1_new.np", np.array(predictions))
+    #np.save("exp1_new.np", np.array(predictions))
+    return np.array(predictions)
+    #print("New Preds saved")
 
-    print("New Preds saved")
-
-
+"""
 if __name__ == "__main__":
     train_dir, test_dir = "dir/", "test_dir/"
     train_title_fp, test_title_fp = train_dir + "train_v2_title", test_dir+"test_title"
     cat_path = train_dir + "train_v2_category"
     pred(train_title_fp, test_title_fp, train_dir, test_dir, cat_path)
+"""
