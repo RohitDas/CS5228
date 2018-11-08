@@ -127,7 +127,7 @@ def predict(X_train, y_train, X_test):
 # Preparing Data
 ids, keywords = zip (*read_train_keywords ().items ())
 # print(keywords[0])
-labels = np.reshape (np.load ('train_corrected.npy')[:, [1]], -1).tolist ()
+labels = np.reshape (np.load ('train_merged_corrected.npy')[:, [1]], -1).tolist ()
 
 # # Preparing Test Data
 # test_df = pd.read_csv ("test_v2.csv", skiprows=[0], header=None)
