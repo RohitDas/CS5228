@@ -10,3 +10,13 @@ The data which comprises of train.csv, train_v2.csv and test_v2.csv should all b
 
 
 The below tree is for the structure of the directory
+
+├───code
+│   ├───dir
+│   ├───test_dir
+│   └───__pycache__
+└───data
+    ├───dir
+    ├───test_dir
+    ├───train_v1_dir
+    └───train_v2_dir
