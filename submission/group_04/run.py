@@ -3,6 +3,16 @@ from code.process_urls import scrape
 from code.sentence_similarity import pred
 
 import pandas as pd
+import os
+
+if not os.path.exists("data/train_v2_dir"):
+    os.makedirs("data/train_v2_dir")
+
+if not os.path.exists("data/train_v1_dir"):
+    os.makedirs("data/train_v1_dir")
+
+if not os.path.exists("data/test_dir"):
+    os.makedirs("data/test_dir")
 
 
 #Create required train files
